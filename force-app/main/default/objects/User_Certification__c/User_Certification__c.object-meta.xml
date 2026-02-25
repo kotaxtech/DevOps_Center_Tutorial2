@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>ユーザーと資格の紐付け（取得情報を保持するジャンクション）</description>
+    <enableActivities>false</enableActivities>
+    <enableBulkApi>false</enableBulkApi>
+    <enableHistory>true</enableHistory>
+    <enableReports>true</enableReports>
+    <label>ユーザー資格</label>
+    <nameField>
+        <label>ユーザー資格番号</label>
+        <type>AutoNumber</type>
+        <displayFormat>UC-{00000}</displayFormat>
+    </nameField>
+    <pluralLabel>ユーザー資格</pluralLabel>
+    <searchLayouts/>
+    <sharingModel>ReadWrite</sharingModel>
+
+    <!-- Master-Detail to User -->
+    <fields>
+        <fullName>User__c</fullName>
+        <deleteConstraint>Restrict</deleteConstraint>
+        <description>対象ユーザー</description>
+        <externalId>false</externalId>
+        <label>ユーザー</label>
+        <referenceTo>User</referenceTo>
+        <relationshipLabel>ユーザー資格</relationshipLabel>
+        <relationshipName>User_Certifications</relationshipName>
+        <trackHistory>false</trackHistory>
+        <type>MasterDetail</type>
+        <writeRequiresMasterRead>false</writeRequiresMasterRead>
+    </fields>
+
+    <!-- Master-Detail to Certification__c -->
+    <fields>
+        <fullName>Certification__c</fullName>
+        <deleteConstraint>Restrict</deleteConstraint>
+        <description>対象資格</description>
+        <externalId>false</externalId>
+        <label>資格</label>
+        <referenceTo>Certification__c</referenceTo>
+        <relationshipLabel>ユーザー資格</relationshipLabel>
+        <relationshipName>Certification_User_Certifications</relationshipName>
+        <trackHistory>false</trackHistory>
+        <type>MasterDetail</type>
+        <writeRequiresMasterRead>false</writeRequiresMasterRead>
+    </fields>
+
+    <!-- 取得日 -->
+    <fields>
+        <fullName>AcquisitionDate__c</fullName>
+        <description>資格の取得日</description>
+        <externalId>false</externalId>
+        <label>取得日</label>
+        <required>true</required>
+        <trackHistory>true</trackHistory>
+        <type>Date</type>
+    </fields>
+
+    <!-- 失効日 -->
+    <fields>
+        <fullName>ExpirationDate__c</fullName>
+        <description>資格の失効日</description>
+        <externalId>false</externalId>
+        <label>失効日</label>
+        <required>false</required>
+        <trackHistory>true</trackHistory>
+        <type>Date</type>
+    </fields>
+
+    <!-- 状態 -->
+    <fields>
+        <fullName>Status__c</fullName>
+        <description>資格状態</description>
+        <externalId>false</externalId>
+        <label>状態</label>
+        <required>true</required>
+        <trackHistory>true</trackHistory>
+        <type>Picklist</type>
+        <valueSet>
+            <restricted>true</restricted>
+            <valueSetDefinition>
+                <sorted>true</sorted>
+                <value>
+                    <fullName>Acquired</fullName>
+                    <default>true</default>
+                    <label>Acquired</label>
+                </value>
+                <value>
+                    <fullName>Expired</fullName>
+                    <default>false</default>
+                    <label>Expired</label>
+                </value>
+                <value>
+                    <fullName>Renewed</fullName>
+                    <default>false</default>
+                    <label>Renewed</label>
+                </value>
+                <value>
+                    <fullName>InProgress</fullName>
+                    <default>false</default>
+                    <label>InProgress</label>
+                </value>
+            </valueSetDefinition>
+        </valueSet>
+    </fields>
+
+    <!-- 認定ID -->
+    <fields>
+        <fullName>CredentialId__c</fullName>
+        <description>発行元の認定ID</description>
+        <externalId>false</externalId>
+        <label>認定ID</label>
+        <length>255</length>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+
+    <!-- 証跡URL -->
+    <fields>
+        <fullName>EvidenceUrl__c</fullName>
+        <description>証跡となるURL（バッジ/認定公開ページなど）</description>
+        <externalId>false</externalId>
+        <label>証跡URL</label>
+        <required>false</required>
+        <type>Url</type>
+    </fields>
+
+    <!-- 備考 -->
+    <fields>
+        <fullName>Notes__c</fullName>
+        <description>備考</description>
+        <externalId>false</externalId>
+        <label>備考</label>
+        <length>32768</length>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <type>LongTextArea</type>
+        <visibleLines>5</visibleLines>
+    </fields>
+
+    <!-- 現在有効 -->
+    <fields>
+        <fullName>IsCurrent__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>現在有効</label>
+        <trackHistory>true</trackHistory>
+        <type>Checkbox</type>
+    </fields>
+
+    <!-- Validation: 失効日 >= 取得日 -->
+    <validationRules>
+        <fullName>Expiration_After_Acquisition</fullName>
+        <active>true</active>
+        <errorConditionFormula>
+            AND(
+                NOT(ISBLANK(ExpirationDate__c)),
+                NOT(ISBLANK(AcquisitionDate__c)),
+                ExpirationDate__c &lt; AcquisitionDate__c
+            )
+        </errorConditionFormula>
+        <errorMessage>失効日は取得日以降を指定してください</errorMessage>
+        <errorDisplayField>ExpirationDate__c</errorDisplayField>
+    </validationRules>
+
+    <!-- List View: 直近取得 -->
+    <listViews>
+        <fullName>RecentAcquisitions</fullName>
+        <label>直近の取得</label>
+        <filterScope>Everything</filterScope>
+        <columns>NAME</columns>
+        <columns>User__c</columns>
+        <columns>Certification__c</columns>
+        <columns>AcquisitionDate__c</columns>
+        <columns>Status__c</columns>
+        <columns>IsCurrent__c</columns>
+        <filters>
+            <field>AcquisitionDate__c</field>
+            <operation>last_n_days</operation>
+            <value>365</value>
+        </filters>
+    </listViews>
+
+    <!-- Page Layout -->
+    <recordTypes/>
+    <fieldSets/>
+    <compactLayouts/>
+    <sharingReasons/>
+</CustomObject>
